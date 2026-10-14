@@ -1,4 +1,4 @@
-# Shed House Portal — SHP 1.1
+# Shed House Portal — SHP 1.2
 
 Responsive branded concept using the supplied Shed House SVG logos and brand palette. Work Sans is the approved alternative to Kit Sans, loaded from Google Fonts with a local sans-serif fallback.
 
@@ -15,6 +15,8 @@ Objective Build integration currently means registering an HTTPS project/documen
 Inventory is a comprehensive category template with zero quantities, requiring approved engineering and supplier reconciliation. Inspection holds must be entered from the actual consent. Agreements and valuations are unreviewed preparations, not certified statutory documents. The ROW workspace prepares information for the official prescribed form, without creating a signature. Completion record sharing is independent of payment; non-payment cannot be used to withhold an LBP Record of Work.
 
 Checks: run the bundled Node executable against scripts/check-workspaces.cjs from this folder. Browser checks cover variation request/assessment/approval persistence, inspection dashboard warnings, fee presentation and contractor meters; responsive width was checked at 390px.
+
+SHP 1.2 adds ranked suppliers and upgrade packages, nationwide freight manifests/handovers, HHT carrier defaults, material incident holds, actual local photo/PDF evidence, contractor invoice preferences, CSV pricing import and a development XLSX model. See docs/shp-1.2-release.md for details and docs/hht-tracking-integration.md for the pending HHT access plan. Evidence is saved in IndexedDB on this device only; no server upload, carrier claim or live tracking connection is active. The spreadsheet's calculations were checked, but its visual renderer was unavailable; review in Excel before use.
 
 Phase 02: invitation-only authentication, server-side role and project permissions, database, secure documents, audit trail, notifications and real CRM integration. Phase 03: contractor verification, tender lifecycle, proposal comparison, customer award approval, contractor-specific milestones and handover records.
 

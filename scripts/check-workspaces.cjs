@@ -1,8 +1,8 @@
 const fs=require('node:fs');const vm=require('node:vm');const assert=require('node:assert/strict');
 const storage=new Map(), nodes=new Map();
-const node=()=>({innerHTML:'',textContent:'',value:'',style:{},dataset:{},onclick:null,onchange:null,addEventListener(){},showModal(){},close(){},querySelector(){return node()},querySelectorAll(){return []}});
+const node=()=>({innerHTML:'',textContent:'',value:'',style:{},dataset:{},elements:new Proxy({}, {get:(t,k)=>t[k]||(t[k]=node())}),onclick:null,onchange:null,addEventListener(){},showModal(){},close(){},querySelector(){return node()},querySelectorAll(){return []}});
 const ctx={console,crypto:require('node:crypto').webcrypto,URL,Blob,setTimeout:()=>0,clearTimeout(){},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{querySelector:s=>{if(!nodes.has(s))nodes.set(s,node());return nodes.get(s)},querySelectorAll:()=>[],getElementById:id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)}},window:{},confirm:()=>true,prompt:()=>null};
-vm.createContext(ctx);for(const f of ['staff','customer','contractor','app','workspace'])vm.runInContext(fs.readFileSync(`dist/${f}.js`,'utf8'),ctx,{filename:f});
+vm.createContext(ctx);for(const f of ['staff','customer','contractor','app','evidence-store','staff-logistics','customer-deliveries','workspace'])vm.runInContext(fs.readFileSync(`dist/${f}.js`,'utf8'),ctx,{filename:f});
 const run=s=>vm.runInContext(s,ctx);
 run(`for(const r of ['staff','customer','contractor']){role=r;for(const p of menuGroups().flatMap(x=>x[1])){page=p;render();if(!$('#app').innerHTML.includes('<main>'))throw Error('Missing page '+r+' '+p)}}`);
 assert.equal(run('workspace.fees.contractorMonthly'),99);assert.equal(run('workspace.fees.customerTender'),399);
@@ -29,4 +29,16 @@ nodes.get('#convertLead').values={name:'Converted demo lead',model:'Demo kit 120
 nodes.get('#convertLead').onsubmit({preventDefault(){}});
 assert.equal(run('workspace.confirmedProjects.length'),1);assert.equal(run('leads[0].stage'),'Confirmed');
 assert(nodes.get('#app').innerHTML.includes('Converted demo lead'));
-console.log('Passed: all role pages, configured fees, document/inventory visibility, project-scoped inbox, inspection notice, variation review, shared scope.');
+run(`role='customer';workspace.freightIncidents.push({id:'damage',projectId:projects[0].id,type:'Damaged',item:'Roof sheet',description:'QA damage',status:'Reported',hold:true});page='Overview';render()`);
+assert(nodes.get('#app').innerHTML.includes('Kitset delivery hold'));
+assert.equal(run('workspace.carrierDefaults.name'),'Hilton Haulage Transport');
+const good=ctx.window.SHContractor.parsePricingCSV('item_code,description,category,unit,quantity,unit_cost_ex_gst,markup_percent\nROOF,Roof sheet,Roof,ea,2,100.25,20');
+assert.equal(good.errors.length,0);assert.equal(good.rows[0].cost,200.5);assert.equal(good.rows[0].selling,240.6);
+const amounts=ctx.window.SHContractor.invoiceAmounts({amount:1150,previous:0},{model:'Fixed-price invoice',gstRegistered:true,taxBasis:'Including GST'});
+assert.equal(amounts.net,1000);assert.equal(amounts.gst,150);assert.equal(amounts.gross,1150);
+assert(ctx.window.SHContractor.parsePricingCSV('item_code,description,category,unit,quantity,unit_cost_ex_gst,markup_percent\nROOF,Roof,Roof,ea,-2,100,20').errors.length>0);
+const model=ctx.window.SHContractor.parsePricingCSV(fs.readFileSync('dist/downloads/shp-contractor-pricing-development.csv','utf8'));
+assert.equal(model.errors.length,0);assert.equal(model.rows.reduce((a,r)=>a+r.cost,0),2400);assert.equal(model.rows.reduce((a,r)=>a+r.selling,0),2870);
+run(`workspace.upgrades.push({id:'upgrade',name:'Shared available upgrade',description:'Fictional QA',status:'Available',priceExGst:100,supplierId:'demo'});role='customer';page='Kitset upgrades';render()`);
+assert(nodes.get('#app').innerHTML.includes('Shared available upgrade'));
+console.log('Passed: all role pages; project/document/inventory scoping; inspection and freight holds; supplier/upgrade sharing; quote conversion; CSV validation/model reconciliation; invoice models and GST.');
