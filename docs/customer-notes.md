@@ -13,3 +13,5 @@ Scope revisions capture inclusions, exclusions, responsibilities, site access, c
 Shared keys: inspections, variations, documents, tenderScopes, tenderOptions, fees.customerTender. Notifications use `staff`, `customer`, `contractor` role identifiers. Data fields and mutation events are escaped on output.
 
 Customer followup: Kitset inventory groups shared customer-visible items by category and hides supplier ordering information. Inline document content is escaped, preserving preparation draft labels. Inspection due dates sort upcoming first, with unresolved hold counts. Tender service snapshots preserve fees excluding and including configured GST, with the GST rate.
+
+Final UI QA: inspection recording uses inline expandable forms; recorded pass requires inspector, inspection date and evidence. Variation approval uses an inline explicit review checkbox, and both decisions append customer status history. No native prompt/confirm dialogs are used.
