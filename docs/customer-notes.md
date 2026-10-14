@@ -11,3 +11,5 @@ The project library reads shared documents visible to `customer`. Links accept H
 Scope revisions capture inclusions, exclusions, responsibilities, site access, consent references, specification revisions and acceptance criteria. Optional tender selection stores interest and a fee snapshot. An unset fee remains visibly unconfigured; no payment is taken. Scope revision storage currently keeps the current revision number, not historical snapshots.
 
 Shared keys: inspections, variations, documents, tenderScopes, tenderOptions, fees.customerTender. Notifications use `staff`, `customer`, `contractor` role identifiers. Data fields and mutation events are escaped on output.
+
+Customer followup: Kitset inventory groups shared customer-visible items by category and hides supplier ordering information. Inline document content is escaped, preserving preparation draft labels. Inspection due dates sort upcoming first, with unresolved hold counts. Tender service snapshots preserve fees excluding and including configured GST, with the GST rate.
