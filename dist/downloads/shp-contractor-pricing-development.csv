@@ -1,0 +1,4 @@
+item_code,description,category,unit,quantity,unit_cost_ex_gst,markup_percent
+DEMO-001,Fictitious erection labour,Labour,hour,40,50,20
+DEMO-002,Fictitious fixings allowance,Materials,lot,1,200,25
+DEMO-003,Fictitious equipment hire,Equipment,day,2,100,10
