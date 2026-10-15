@@ -124,7 +124,7 @@ assert.throws(()=>design.validateMood({roofColourId:'not-in-palette',wallColourI
 assert.throws(()=>design.validateFacts({totalAreaM2:'-1',bedrooms:'2',bathrooms:'2',status:'SH confirmed',provenance:'Drawing'}));
 assert(!design.render('Fixtures & finishes',designContext).includes('data-cd-base='));
 console.log('Passed: project facts source/basis, unknown project values, customer edit boundaries and exterior palette validation.');
-const crossDeviceQuantityContext={...designContext,store:{inventory:[],selectionInventory:[{id:'q1',projectId:'SH-TMP-DEMO-LOCKUP',name:'Measured lining',qty:25,unit:'m²',spec:'Drawing A101',version:'A'}],selectionMeasurements:[],suppliers:[{id:'s1',name:'QA supplier',email:'pricing@example.invalid'}],finishSelections:[{id:'f1',projectId:'SH-TMP-DEMO-LOCKUP',category:'Interior walls',product:'Lining',finish:'White',quantity:25,unit:'m²',quantitySource:{kind:'inventory',id:'q1'},quantityReviewed:true}]}};
+const crossDeviceQuantityContext={...designContext,store:{inventory:[{id:'q1',projectId:'SH-TMP-DEMO-LOCKUP',name:'Stale local quantity',qty:999,unit:'m²'}],selectionInventory:[{id:'q1',projectId:'SH-TMP-DEMO-LOCKUP',name:'Measured lining',qty:25,unit:'m²',spec:'Drawing A101',version:'A'}],selectionMeasurements:[],suppliers:[{id:'s1',name:'QA supplier',email:'pricing@example.invalid'}],finishSelections:[{id:'f1',projectId:'SH-TMP-DEMO-LOCKUP',category:'Interior walls',product:'Lining',finish:'White',quantity:25,unit:'m²',quantitySource:{kind:'inventory',id:'q1'},quantityReviewed:true}]}};
 const rfqSnapshot=design.buildRequest(crossDeviceQuantityContext,{supplierId:'s1',category:'Interior walls',notes:'QA draft only'});
 assert.equal(rfqSnapshot.lines[0].quantity,25);
 assert.equal(rfqSnapshot.lines[0].unit,'m²');
