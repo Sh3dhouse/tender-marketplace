@@ -26,3 +26,5 @@ SHP 1.3 adds project BOM PDF attachment and reviewed CSV inventory import, exact
 
 
 Customer visual reminder: dashboard hero and quick Plan set access support project-specific floor plans, elevations and selected renders supplied by SH. No architectural image is preloaded; actual files must be added to the selected project's Plan set. Uploads are device-local in this preview.
+
+Shared customer selection backend: see docs/shared-customer-selections.md. The maintained UI remains in dist; run node scripts/build-shared-worker.cjs for the Worker archive. Customer selections now use authenticated shared storage; other prototype records and ordinary file uploads retain their documented local behavior. Supplier requests support reviewed quantities and Gmail compose; direct sending is not enabled.
