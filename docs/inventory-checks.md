@@ -11,3 +11,5 @@ Explicit reporting requires a same-project shipment and creates a Reported incid
 Shared records: inventoryChecks, freightIncidents, shipments. Existing inventory supply rows are read, not changed. A replacement check updates that item’s current inspection record; freight incidents retain their independent assessment histories.
 
 Identity followup: code-only incidents match only when that code is unique within the project. Explicit sourceIdentity matches or inventoryId links identify specific cut-length rows. Ambiguous manufacturer codes remain unlinked until SH supplies the exact row ID. A confirmed check marked Needs SH assessment prevents the complete badge even when quantities reconcile; summary.review counts those rows.
+
+Unassigned shipment reporting: a customer can explicitly report a physical discrepancy before SH registers freight. Such incidents retain shipmentId null, shipmentAssignmentPending true and affected-material hold true. Notifications identify the missing shipment assignment. Supplied invalid/other-project shipment IDs are rejected; no carrier or consignment is fabricated.
