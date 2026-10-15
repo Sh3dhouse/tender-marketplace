@@ -21,3 +21,9 @@ Proposed monthly fees excluding GST: builder NZ$149, trade contractor NZ$99, sup
 Role workflow checks cover package seed idempotency, repeated item codes, quantities, receipt flags and draft fees. Three private source PDFs were converted into reviewed local test schedules (73, 92 and 114 material rows); administrative rows were excluded and cut lengths remained specifications rather than quantities. One actual PDF was attached and its 73 rows imported through localhost for an end-to-end check. Damage and shortage persisted on the same line across customer and SH views.
 
 Private source PDFs, extracted text and schedules are outside Git and the deployment archive. The hosted preview has separate browser storage and does not contain those local test uploads. Demo role switching and browser storage remain prototype functionality; server authentication, durable shared uploads, live freight/NZBN connections and real billing are not enabled.
+
+## Project management follow-up
+
+Adds a distinct draft project-management-company membership proposal at NZ$199/month excluding GST alongside builder149, trade99 and supply-only49. Proposed eligibility covers appointed coordination duties, relevant experience, business identity and insurance evidence for SH review. A registration or self-declaration is not competence verification; tier interest does not activate billing or project permissions.
+
+The Project manager page records internal phase reviews with pass/fail, reviewer, date and a required explanatory summary. Earlier reviews remain available and records are scoped to the selected project. Contractor preview can record reviews; Shed House and Customer previews can read them. These internal coordination records do not replace council inspections, consent decisions or practitioner certifications. The prototype continues using browser-local storage and demo roles.

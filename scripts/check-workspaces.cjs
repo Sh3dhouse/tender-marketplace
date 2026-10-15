@@ -2,7 +2,7 @@ const fs=require('node:fs');const vm=require('node:vm');const assert=require('no
 const storage=new Map(), nodes=new Map();
 const node=()=>({innerHTML:'',textContent:'',value:'',style:{},dataset:{},elements:new Proxy({}, {get:(t,k)=>t[k]||(t[k]=node())}),onclick:null,onchange:null,addEventListener(){},showModal(){},close(){},querySelector(){return node()},querySelectorAll(){return []}});
 const ctx={console,crypto:require('node:crypto').webcrypto,URL,Blob,setTimeout:()=>0,clearTimeout(){},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{querySelector:s=>{if(!nodes.has(s))nodes.set(s,node());return nodes.get(s)},querySelectorAll:()=>[],getElementById:id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)}},window:{},confirm:()=>true,prompt:()=>null};
-vm.createContext(ctx);for(const f of ['staff','customer','contractor','app','evidence-store','staff-logistics','customer-deliveries','staff-bom-tenders','inventory-checks','tmp-membership','workspace'])vm.runInContext(fs.readFileSync(`dist/${f}.js`,'utf8'),ctx,{filename:f});
+vm.createContext(ctx);for(const f of ['staff','customer','contractor','app','evidence-store','staff-logistics','customer-deliveries','staff-bom-tenders','inventory-checks','tmp-membership','project-management','workspace'])vm.runInContext(fs.readFileSync(`dist/${f}.js`,'utf8'),ctx,{filename:f});
 const run=s=>vm.runInContext(s,ctx);
 run(`for(const r of ['staff','customer','contractor']){role=r;for(const p of menuGroups().flatMap(x=>x[1])){page=p;render();if(!$('#app').innerHTML.includes('<main>'))throw Error('Missing page '+r+' '+p)}}`);
 assert.equal(run('workspace.fees.contractorMonthly'),99);assert.equal(run('workspace.fees.customerTender'),399);
@@ -49,3 +49,20 @@ assert.equal(run(`window.SHInventoryChecks.rowState(workspace.inventory.find(x=>
 const bom=ctx.window.SHBOMTender.validateCSV('category,item_code,description,specification,quantity,unit\nRoof,CODE,Roof sheet,6.28m,34,ea\nRoof,CODE,Roof sheet,2.55m,9,ea');
 assert.equal(bom.errors.length,0);assert.equal(bom.rows.length,2);assert.notEqual(bom.rows[0].sourceLine,bom.rows[1].sourceLine);assert.equal(bom.rows[0].qty,34);
 console.log('Passed: all role pages; project/document/inventory scoping; inspection and freight holds; supplier/upgrade sharing; quote conversion; CSV validation/model reconciliation; invoice models and GST.');
+
+// Project manager decisions remain scoped, documented and append-only.
+const pm=ctx.window.SHProjectManagement;
+run(`role='contractor';workspace.contractorProjectId=projects[0].id`);
+const pmContext=run('context()');
+const phase='design',review={phaseId:phase,result:'fail',reviewer:'Demo manager',reviewDate:'2026-10-14',summary:'Fix the documented coordination issue before re-review.'};
+assert.throws(()=>pm.appendReview(pmContext,{...review,summary:'   '}));
+const failedReview=pm.appendReview(pmContext,review);
+const passedReview=pm.appendReview(pmContext,{...review,result:'pass',summary:'Evidence reviewed; documented issue closed.'});
+assert.equal(passedReview.supersedes,failedReview.id);assert.equal(passedReview.revision,2);
+assert.equal(failedReview.result,'fail');
+assert.throws(()=>pm.appendReview({...pmContext,role:'customer'},review));
+const otherProject=run('projects[1]');
+assert(!pm.render('Project manager',{...pmContext,projectId:otherProject.id,project:otherProject}).includes('Evidence reviewed; documented issue closed.'));
+assert.equal(run('workspace.membershipTierProposals.projectManager'),199);
+assert.equal(run('workspace.fees.contractorMonthly'),99);
+console.log('Passed: project manager mandatory summaries, append-only revisions, role guards, project isolation and proposed tier migration.');
