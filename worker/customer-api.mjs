@@ -1,10 +1,10 @@
 // Sites authenticates the owner-private preview. Business roles remain previews.
-const KEYS=['projectFacts','finishSpecifications','finishSelections','moodboards','selectionMeasurements','supplierQuoteRequests','suppliers'];
+const KEYS=['projectFacts','finishSpecifications','finishSelections','moodboards','selectionMeasurements','supplierQuoteRequests','suppliers','selectionInventory'];
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
 export function validateState(data){
  if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Invalid state');
  const clean={};for(const key of KEYS){const rows=data[key]??[];if(!Array.isArray(rows)||rows.length>1500)throw Error('Invalid collection');
-  clean[key]=rows.map(row=>{if(!row||typeof row!=='object'||Array.isArray(row)||typeof row.id!=='string'||row.id.length>160)throw Error('Invalid record');if(key!=='suppliers'&&(typeof row.projectId!=='string'||!/^SH-[A-Za-z0-9-]{1,100}$/.test(row.projectId)))throw Error('Invalid project');return row;});
+  clean[key]=rows.map(row=>{if(!row||typeof row!=='object'||Array.isArray(row)||typeof row.id!=='string'||row.id.length>160)throw Error('Invalid record');if(key!=='suppliers'&&(typeof row.projectId!=='string'||!/^SH-[A-Za-z0-9-]{1,100}$/.test(row.projectId)))throw Error('Invalid project');return key==='selectionInventory'?Object.fromEntries(['id','projectId','name','qty','unit','spec','sourceBOMId','version'].filter(k=>row[k]!==undefined).map(k=>[k,row[k]])):row;});
  }return clean;
 }
 export async function customerAPI(request,env){

@@ -1,12 +1,12 @@
 /* Owner-private shared customer workspace. Other prototype records remain device-local. */
 window.SHSharedSelections=(()=>{
- const keys=['projectFacts','finishSpecifications','finishSelections','moodboards','selectionMeasurements','supplierQuoteRequests','suppliers'];
+ const keys=['projectFacts','finishSpecifications','finishSelections','moodboards','selectionMeasurements','supplierQuoteRequests','suppliers','selectionInventory'];
  let store,options,revision=0,ready=false,saving=false,blocked=false,local=false,timer,last='',message='Loading shared customer selections…',pending=false;
- const snapshot=()=>Object.fromEntries(keys.map(k=>[k,Array.isArray(store[k])?store[k]:[]]));
+ const snapshot=()=>{store.selectionInventory||=[];if(typeof role!=='undefined'&&role==='staff')for(const x of store.inventory||[]){const row={id:x.id,projectId:x.projectId,name:x.name,qty:x.qty,unit:x.unit,spec:x.spec,sourceBOMId:x.sourceBOMId,version:x.version};if(!row.id||!row.projectId)continue;const index=store.selectionInventory.findIndex(y=>y.id===row.id&&y.projectId===row.projectId);if(index<0)store.selectionInventory.push(row);else store.selectionInventory[index]=row;}return Object.fromEntries(keys.map(k=>[k,Array.isArray(store[k])?store[k]:[]]));};
  function status(text){message=text;const el=document.getElementById('shared-selection-status');if(el){el.querySelector('[data-shared-message]').textContent=message;el.querySelector('[data-shared-retry]').hidden=!blocked;}}
  function panel(){return '<section id="shared-selection-status" class="shared-selection-status" aria-live="polite"><span data-shared-message>'+message+'</span> <button class="link" data-shared-refresh>Refresh shared selections</button> <button class="link" data-shared-retry '+(blocked?'':'hidden')+'>Retry save</button></section>';}
  async function read(){const response=await fetch('/api/customer-state',{credentials:'same-origin',cache:'no-store'});if(!response.ok)throw Error('Shared selections could not load. Local edits are not shared.');return response.json();}
- function apply(data){for(const key of keys)store[key]=Array.isArray(data[key])?data[key]:[];options.saveLocal();last=JSON.stringify(snapshot());}
+ function apply(data){for(const key of keys)store[key]=Array.isArray(data[key])?data[key]:[];options.saveLocal();last=JSON.stringify(Object.fromEntries(keys.map(k=>[k,store[k]])));}
  async function start(s,o){store=s;options=o;if(location.protocol==='file:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'){local=true;status('Local preview: shared storage is available on the hosted private portal.');return;}
   try{const remote=await read();revision=remote.revision;ready=true;
    if(revision){localStorage.setItem('shp-selections-before-shared-load',JSON.stringify(snapshot()));apply(remote.data);status('Shared customer selections loaded.');}
