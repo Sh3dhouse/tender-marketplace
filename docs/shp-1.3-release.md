@@ -39,3 +39,11 @@ Authentication limitation: this static preview does not implement individual cre
 The Customer dashboard and Project documents page include a project-specific visual reminder and quick plan access. A dedicated Plan set page groups floor plan, elevations and selected renders; three renders (front exterior, rear exterior, interior) are the starting suggestion. Shed House manages project files, versions, status and selection through Plan set. No architectural source render or plan was supplied, so the initial view clearly asks for the actual project files rather than displaying a fictional house as contracted.
 
 Images and PDFs use the existing device-local file store. Uploaded files are not included in Git or the deployment archive, and do not synchronize across browsers. Status labels are supplied by SH; uploading a file does not approve a design or establish consent. Production requires shared durable storage and account/project authorization.
+
+## Customer project information and design preferences
+
+Project information cards use SH-entered facts and source/status labels rather than deriving area or bedroom counts from a model name. The lockup test reference uses supplied PLANS.pdf A101 (05/10/2026): 300 m² ground-floor area including garage, two bedrooms and two bathrooms including ensuite. Mezzanine-inclusive total floor area remains unconfirmed. Other project facts await SH entry.
+
+Customer fixtures and finishes are draft preferences grouped by construction element, with supplier, product, finish and notes. No order, substitution or contract variation is executed by saving a preference.
+
+The mood board combines a schematic gable exterior with separate roof and cladding selectors, and interior colour preferences. Its COLORSTEEL digital swatches were read from the official colour selector HTML on 15 October 2026: https://www.colorsteel.co.nz/colours . Names and digital swatches support visual exploration only. Physical samples, product/finish availability and the actual project specification require confirmation. The schematic is not a recoloured photo, engineering model or approved project render. No exterior steel colour is represented as an interior paint product. Preferences remain browser-local in this prototype.
