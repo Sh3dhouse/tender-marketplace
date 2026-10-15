@@ -87,7 +87,14 @@ assert(!planHTML.includes('OTHER PROJECT SECRET'));
 assert(!planHTML.includes('STAFF SOURCE LINK'));
 assert(!planHTML.includes('id="ps-upload"'));
 assert(!planHTML.includes('id="ps-settings"'));
-assert(planHTML.includes('No contracted house image has been supplied'));
+assert(planHTML.includes('assets/customer-test-house.png'));assert(planHTML.includes('does not represent your contracted design'));
 assert(!planHTML.includes('data-ps-image="old-render"'));
 assert(plan.render('Plan set',{...planContext,role:'staff'}).includes('id="ps-upload"'));
 console.log('Passed: customer plan-set project isolation, staff-only source exclusion, read-only forms and superseded-hero fallback.');
+
+const actualHero={id:'actual-render',projectId:'P1',visibility:['customer'],category:'Render',name:'Actual project render',version:'B',status:'Contract reference',attachment:{type:'image/png',id:'actual-image'}};
+planStore.planSetDocuments.push(actualHero);planStore.planSetSettings[0].heroDocumentId=actualHero.id;
+const actualPanel=plan.panel(planContext);
+assert(actualPanel.includes('data-ps-image="actual-render"'));
+assert(!actualPanel.includes('assets/customer-test-house.png'));
+console.log('Passed: labelled test image fallback and actual project render precedence.');
