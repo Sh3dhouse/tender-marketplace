@@ -4,7 +4,7 @@ const node=()=>({innerHTML:'',textContent:'',value:'',style:{},dataset:{},elemen
 const ctx={console,crypto:require('node:crypto').webcrypto,URL,Blob,setTimeout:()=>0,clearTimeout(){},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{querySelector:s=>{if(!nodes.has(s))nodes.set(s,node());return nodes.get(s)},querySelectorAll:()=>[],getElementById:id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)}},window:{},confirm:()=>true,prompt:()=>null};
 vm.createContext(ctx);for(const f of ['staff','customer','contractor','app','evidence-store','staff-logistics','customer-deliveries','staff-bom-tenders','inventory-checks','tmp-membership','project-management','workspace'])vm.runInContext(fs.readFileSync(`dist/${f}.js`,'utf8'),ctx,{filename:f});
 const run=s=>vm.runInContext(s,ctx);
-run(`for(const r of ['staff','customer','contractor']){role=r;for(const p of menuGroups().flatMap(x=>x[1])){page=p;render();if(!$('#app').innerHTML.includes('<main>'))throw Error('Missing page '+r+' '+p)}}`);
+run(`for(const r of ['staff','customer','contractor','projectManager']){role=r;for(const p of menuGroups().flatMap(x=>x[1])){page=p;render();if(!$('#app').innerHTML.includes('<main>'))throw Error('Missing page '+r+' '+p)}}`);
 assert.equal(run('workspace.fees.contractorMonthly'),99);assert.equal(run('workspace.fees.customerTender'),399);
 assert.equal(run('money(99*1.15)'),'$113.85');assert.equal(run('money(399*1.15)'),'$458.85');
 run(`workspace.documents.push({id:'hidden',projectId:projects[0].id,name:'PRIVATE STAFF DOC',visibility:['staff'],url:'https://example.com'});role='customer';page='Project documents';render()`);
@@ -53,7 +53,7 @@ console.log('Passed: all role pages; project/document/inventory scoping; inspect
 // Project manager decisions remain scoped, documented and append-only.
 const pm=ctx.window.SHProjectManagement;
 run(`role='contractor';workspace.contractorProjectId=projects[0].id`);
-const pmContext=run('context()');
+const pmContext={...run('context()'),role:'projectManager'};
 const phase='design',review={phaseId:phase,result:'fail',reviewer:'Demo manager',reviewDate:'2026-10-14',summary:'Fix the documented coordination issue before re-review.'};
 assert.throws(()=>pm.appendReview(pmContext,{...review,summary:'   '}));
 const failedReview=pm.appendReview(pmContext,review);
@@ -66,3 +66,14 @@ assert(!pm.render('Project manager',{...pmContext,projectId:otherProject.id,proj
 assert.equal(run('workspace.membershipTierProposals.projectManager'),199);
 assert.equal(run('workspace.fees.contractorMonthly'),99);
 console.log('Passed: project manager mandatory summaries, append-only revisions, role guards, project isolation and proposed tier migration.');
+run(`role='projectManager';page='Overview';render()`);
+assert.equal(run('permittedProjects().length'),2);
+assert(!nodes.get('#app').innerHTML.includes('The Lawson House'));
+assert(!run('menuGroups().flatMap(g=>g[1]).includes("Contractor pricing")'));
+const assignedPM=run('context()');
+assert.throws(()=>pm.appendReview({...assignedPM,projectId:'SH-2026-024'},{...review,phaseId:'design'}));
+run(`workspace.projectManagerAssignments=[];page='Overview';render()`);
+assert(nodes.get('#app').innerHTML.includes('No projects assigned'));
+assert.throws(()=>pm.appendReview(run('context()'),review));
+run(`page='Project manager';render()`);assert(nodes.get('#app').innerHTML.includes('No assigned project'));
+console.log('Passed: fourth-role navigation, assigned-project filtering, unassigned review rejection and empty assignments.');
