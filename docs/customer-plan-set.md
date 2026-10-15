@@ -11,3 +11,5 @@ Only the staff preview gets upload/link/edit/selection controls. Files are PDF/J
 The current preview remains device-local with simulated role restrictions. Production needs server permissions, durable project file storage and independent document/contract verification. Publication and root routing are the coordinating agent’s responsibility.
 
 The user-supplied IMG_3289.PNG is bundled as assets/customer-test-house.png as the temporary customer test image. A visible label distinguishes it from the contracted design. Selecting an actual project render takes precedence over this fallback. The test image is not counted as an approved or selected project render.
+
+Cross-device test plans: user-authorized PLANS.pdf is now tracked at dist/downloads/customer-test-plans.pdf and hosted with the private preview. The lockup demo project exposes fixed open/download links even with empty browser storage. The earlier local test entry is hidden when it matches the known duplicate; original local records are retained. Other uploads remain device-local. Bundled plans are demonstration material, not approved scope for the demo project.
