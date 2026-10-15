@@ -2,7 +2,7 @@ const fs=require('node:fs');const vm=require('node:vm');const assert=require('no
 const storage=new Map(), nodes=new Map();
 const node=()=>({innerHTML:'',textContent:'',value:'',style:{},dataset:{},elements:new Proxy({}, {get:(t,k)=>t[k]||(t[k]=node())}),onclick:null,onchange:null,addEventListener(){},showModal(){},close(){},querySelector(){return node()},querySelectorAll(){return []}});
 const ctx={console,crypto:require('node:crypto').webcrypto,URL,Blob,setTimeout:()=>0,clearTimeout(){},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{querySelector:s=>{if(!nodes.has(s))nodes.set(s,node());return nodes.get(s)},querySelectorAll:()=>[],getElementById:id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)}},window:{},confirm:()=>true,prompt:()=>null};
-vm.createContext(ctx);for(const f of ['staff','customer','contractor','app','evidence-store','staff-logistics','customer-deliveries','staff-bom-tenders','inventory-checks','tmp-membership','project-management','workspace'])vm.runInContext(fs.readFileSync(`dist/${f}.js`,'utf8'),ctx,{filename:f});
+vm.createContext(ctx);for(const f of ['staff','customer','contractor','app','evidence-store','staff-logistics','customer-deliveries','staff-bom-tenders','inventory-checks','tmp-membership','project-management','customer-plan-set','workspace'])vm.runInContext(fs.readFileSync(`dist/${f}.js`,'utf8'),ctx,{filename:f});
 const run=s=>vm.runInContext(s,ctx);
 run(`for(const r of ['staff','customer','contractor','projectManager']){role=r;for(const p of menuGroups().flatMap(x=>x[1])){page=p;render();if(!$('#app').innerHTML.includes('<main>'))throw Error('Missing page '+r+' '+p)}}`);
 assert.equal(run('workspace.fees.contractorMonthly'),99);assert.equal(run('workspace.fees.customerTender'),399);
@@ -77,3 +77,17 @@ assert(nodes.get('#app').innerHTML.includes('No projects assigned'));
 assert.throws(()=>pm.appendReview(run('context()'),review));
 run(`page='Project manager';render()`);assert(nodes.get('#app').innerHTML.includes('No assigned project'));
 console.log('Passed: fourth-role navigation, assigned-project filtering, unassigned review rejection and empty assignments.');
+// Customer plan set must not expose another project's or staff-only source documents.
+const plan=ctx.window.SHCustomerPlanSet;
+const planStore={documents:[{id:'staff-plan',projectId:'P1',name:'STAFF ONLY PLAN',visibility:['staff'],url:'https://example.com/private.pdf'}],planSetDocuments:[{id:'floor1',projectId:'P1',visibility:['staff','customer'],category:'Floor plan',name:'CUSTOMER FLOOR',version:'A',status:'Issued for review',provenance:'Demo architect',createdAt:'2026-10-15'},{id:'secret',projectId:'P2',category:'Floor plan',name:'OTHER PROJECT SECRET',version:'B',status:'Concept'},{id:'linked-private',projectId:'P1',sourceDocumentId:'staff-plan',category:'Elevations',name:'STAFF SOURCE LINK',version:'A',status:'Concept'},{id:'old-render',projectId:'P1',visibility:['staff','customer'],category:'Render',name:'OLD RENDER',version:'0',status:'Superseded',attachment:{type:'image/png'}}],planSetSettings:[{projectId:'P1',heroDocumentId:'old-render',selectedRenderIds:['old-render'],standardRenderCount:3}]};
+const planContext={role:'customer',projectId:'P1',project:{name:'Test Shed House'},store:planStore,escape:run('escape'),save:()=>true,navigate:()=>{},notify:()=>{}};
+const planHTML=plan.render('Plan set',planContext);
+assert(planHTML.includes('CUSTOMER FLOOR'));
+assert(!planHTML.includes('OTHER PROJECT SECRET'));
+assert(!planHTML.includes('STAFF SOURCE LINK'));
+assert(!planHTML.includes('id="ps-upload"'));
+assert(!planHTML.includes('id="ps-settings"'));
+assert(planHTML.includes('No contracted house image has been supplied'));
+assert(!planHTML.includes('data-ps-image="old-render"'));
+assert(plan.render('Plan set',{...planContext,role:'staff'}).includes('id="ps-upload"'));
+console.log('Passed: customer plan-set project isolation, staff-only source exclusion, read-only forms and superseded-hero fallback.');

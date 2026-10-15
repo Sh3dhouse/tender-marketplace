@@ -24,3 +24,5 @@ Before operational use, validate actual Shed House contract milestones and respo
 
 SHP 1.3 adds project BOM PDF attachment and reviewed CSV inventory import, exact-line customer receipt checks, damage/shortage highlighting, two draft TMP projects (lockup shell and internal fitout), trade/supplier pricing scopes, region-based NZBN shortlist preparation, and proposed membership tiers. See docs/shp-1.3-release.md. Private BOM samples were tested locally and are excluded from source and deployment.
 
+
+Customer visual reminder: dashboard hero and quick Plan set access support project-specific floor plans, elevations and selected renders supplied by SH. No architectural image is preloaded; actual files must be added to the selected project's Plan set. Uploads are device-local in this preview.
