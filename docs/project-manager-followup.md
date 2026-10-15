@@ -1,0 +1,11 @@
+# SHP 1.3 project-management follow-up
+
+Proposed fourth membership tier: project-management company NZD 199 per month excluding GST / 228.85 including 15% GST. Builder 149, trade 99 and supply-only 49 proposals remain. The PM rationale is separately appointed programme/interface coordination, phase review administration and client reporting. All rates remain draft product proposals, not validated market economics or billing. Existing fees are untouched. Missing projectManager proposal defaults to 199 without replacing existing tier configuration.
+
+PM signup requires self-declared experience/referees, insurance references and coordination scope. ContractorTenderProfiles records these for pending Shed House verification. NZBN format validation does not establish competence. Overlapping-role policy remains proposed and negotiable. Membership does not grant statutory authority or replace trade licensing.
+
+New module `window.SHProjectManagement` provides pages `['Project manager']`, render(page,ctx), bind(page,ctx), and testable appendReview(ctx,data). Host loads project-management.js/css and registers this page for all roles. Contractor can append reviews; staff/customer read-only. Existing ctx interface applies: role, projectId/projects, store, escape, save, toast, navigate. No notification calls occur in the review workflow.
+
+Storage: projectPhaseReviews is append-only, storing id, projectId, phaseId/name, reviewer/date, pass/fail result, mandatory summary, revision, supersedes, createdAt and internal-review disclaimer. Latest review per phase determines visible status/outstanding failures; all history remains. Project phases use tenderPackages milestones where available and stable package+milestone IDs, otherwise six clearly named coordination phases. Internal reviews never change inspection state, statutory approvals, task completion or stage permissions. The demo cannot provide immutable server audit guarantees.
+
+Validation covers money/GST proposal displays and preserved baseline fee; required summary/reviewer/date/result; cross-project isolation; append-only fail-to-pass revisions and read-only guard. Only contractor-owned files changed; no deployment/push performed.
