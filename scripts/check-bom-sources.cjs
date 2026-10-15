@@ -1,0 +1,6 @@
+/* Validate private, local BOM reconciliation fixtures; never packages source PDFs. */
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const folder=process.argv[2];if(!folder)throw Error('Supply the local BOM review folder.');
+const sandbox={window:{},crypto:require('node:crypto').webcrypto,TextDecoder,URL,console};vm.createContext(sandbox);vm.runInContext(fs.readFileSync('dist/staff-bom-tenders.js','utf8'),sandbox);
+const expected=JSON.parse(fs.readFileSync(path.join(folder,'local-bom-test-report.json'),'utf8'));
+for(const report of expected){const result=sandbox.window.SHBOMTender.validateCSV(fs.readFileSync(path.join(folder,report.csv),'utf8'));assert.equal(result.errors.length,0,JSON.stringify(result.errors));assert.equal(result.rows.length,report.material_rows);assert.equal(new Set(result.rows.map(x=>x.sourceLine)).size,result.rows.length);assert(result.rows.every(x=>!['DEL','DELZ','ZZZZZZ'].includes(x.itemCode.toUpperCase())));if(report.source.includes('100091')){const roof=result.rows.find(x=>x.qty===34&&x.spec.includes('6.28m'));assert(roof);assert.equal(roof.unit,'ea');}console.log(`${report.source}: ${result.rows.length} material rows validated; admin rows excluded; repeated manufacturer codes remain separate.`);}

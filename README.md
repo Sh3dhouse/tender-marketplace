@@ -1,4 +1,4 @@
-# Shed House Portal — SHP 1.2
+# Shed House Portal — SHP 1.3
 
 Responsive branded concept using the supplied Shed House SVG logos and brand palette. Work Sans is the approved alternative to Kit Sans, loaded from Google Fonts with a local sans-serif fallback.
 
@@ -21,3 +21,6 @@ SHP 1.2 adds ranked suppliers and upgrade packages, nationwide freight manifests
 Phase 02: invitation-only authentication, server-side role and project permissions, database, secure documents, audit trail, notifications and real CRM integration. Phase 03: contractor verification, tender lifecycle, proposal comparison, customer award approval, contractor-specific milestones and handover records.
 
 Before operational use, validate actual Shed House contract milestones and responsibility boundaries. The common timeline is a proposed conceptual structure, not a contract statement. Resolve the SHP abbreviation overlap by using Portal and Project in full.
+
+SHP 1.3 adds project BOM PDF attachment and reviewed CSV inventory import, exact-line customer receipt checks, damage/shortage highlighting, two draft TMP projects (lockup shell and internal fitout), trade/supplier pricing scopes, region-based NZBN shortlist preparation, and proposed membership tiers. See docs/shp-1.3-release.md. Private BOM samples were tested locally and are excluded from source and deployment.
+
