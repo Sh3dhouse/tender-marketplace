@@ -1,0 +1,72 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const sandbox = { window: {}, URL, Set, WeakSet, Date, Math, JSON, crypto: globalThis.crypto };
+vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../dist/facebook-enquiries.js'), 'utf8'), sandbox);
+const moduleAPI = sandbox.window.SHFacebookEnquiries;
+const { registerPost, captureEnquiry, updateFollowup, convertToLead } = moduleAPI.actions;
+const newContext = () => ({ role: 'staff', store: {}, leads: [], save: async () => true, escape: value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])), navigate() {}, toast() {} });
+const postData = { url: 'https://www.facebook.com/groups/123/posts/456/?utm_source=test', title: 'SH design enquiry example', design: 'Gable 120', campaign: 'Test only', shAuthorConfirmed: true, publicGroupConfirmed: true };
+async function rejects(action, pattern) { await assert.rejects(action, pattern); }
+(async () => {
+  const p = moduleAPI.parseFacebookURL('https://m.facebook.com/groups/123/permalink/456/?comment_id=789&__cft__=tracking');
+  assert.equal(p.postKey, '123/456'); assert.equal(p.commentId, '789');
+  assert.equal(p.canonicalURL, 'https://www.facebook.com/groups/123/posts/456/');
+  for (const url of ['http://facebook.com/groups/123/posts/456/', 'https://facebook.com.evil.test/groups/123/posts/456/', 'https://evilfacebook.com/groups/123/posts/456/', 'https://www.facebook.com/share/abc/', 'https://www.facebook.com/messages/t/1', 'https://user:password@facebook.com/groups/123/posts/456/', 'https://www.facebook.com:444/groups/123/posts/456/', 'https://www.facebook.com/groups/123/posts/456/?comment_id=1&comment_id=2']) {
+    assert.throws(() => moduleAPI.parseFacebookURL(url));
+  }
+  const c = newContext();
+  await rejects(() => registerPost(c, { ...postData, shAuthorConfirmed: false }), /Shed House authored/);
+  await rejects(() => registerPost(c, { ...postData, publicGroupConfirmed: false }), /public/);
+  const post = await registerPost(c, postData);
+  await rejects(() => registerPost(c, { ...postData, url: 'https://mbasic.facebook.com/groups/123/permalink/456/?ref=other' }), /already registered/);
+  assert.equal(c.store.facebookPosts.length, 1);
+  await rejects(() => captureEnquiry(c, { postId: 'unregistered', author: 'Example', originalText: 'Test', publicCommentConfirmed: true }), /registered public post/);
+  const first = await captureEnquiry(c, { postId: post.id, author: 'Example Person', originalText: '  Interested in this design.\nPlease explain.  ', commentURL: 'https://m.facebook.com/groups/123/permalink/456/?comment_id=789&utm_campaign=other', region: 'Waikato', publicCommentConfirmed: true, notes: 'Initial note' });
+  assert.equal(first.originalText, '  Interested in this design.\nPlease explain.  ');
+  await rejects(() => captureEnquiry(c, { postId: post.id, author: 'Changed display name', originalText: 'Edited text', commentURL: 'https://www.facebook.com/groups/123/posts/456/?comment_id=789', publicCommentConfirmed: true }), /already captured/);
+  await rejects(() => captureEnquiry(c, { postId: post.id, author: 'Example', originalText: 'Test', commentURL: 'https://facebook.com/groups/999/posts/123/?comment_id=222', publicCommentConfirmed: true }), /selected registered SH post/);
+  await rejects(() => captureEnquiry(c, { postId: post.id, author: 'Example', originalText: 'Test', commentURL: 'https://facebook.com/groups/123/posts/456/?comment_id=222', commentId: '333', publicCommentConfirmed: true }), /do not match/);
+  await rejects(() => captureEnquiry(c, { postId: post.id, author: 'Example', originalText: 'Test', email: 'example@example.test', publicCommentConfirmed: true }), /supplied these contact details/);
+  const fallback = await captureEnquiry(c, { postId: post.id, author: ' Another   Person ', originalText: 'Need PRICING\nfor this', publicCommentConfirmed: true });
+  await rejects(() => captureEnquiry(c, { postId: post.id, author: 'another person', originalText: 'need pricing for THIS', commentId: '999', publicCommentConfirmed: true }), /already captured/);
+  assert.equal(c.store.facebookEnquiries.length, 2);
+  await updateFollowup(c, first.id, { status: 'Contact details requested', assignee: 'SH sales', nextFollowup: '2026-11-02', notes: 'Follow up manually through the existing conversation.' });
+  await updateFollowup(c, first.id, { status: 'Qualified', assignee: 'SH sales', nextFollowup: '2026-11-03', notes: 'Region and design confirmed.' });
+  assert.equal(c.store.facebookEnquiries[0].history.length, 3);
+  assert.equal(c.store.facebookEnquiries[0].history[0].notes, 'Initial note');
+  assert.equal(c.store.facebookEnquiries[0].history[1].status, 'Contact details requested');
+  await rejects(() => updateFollowup(c, first.id, { status: 'Unknown' }), /valid follow-up/);
+  await rejects(() => updateFollowup(c, first.id, { status: 'Qualified', nextFollowup: '2026-02-31' }), /valid follow-up date/);
+  const lead = await convertToLead(c, first.id); const again = await convertToLead(c, first.id);
+  assert.equal(lead.id, again.id); assert.equal(c.leads.length, 1); assert.equal(c.store.facebookCRMLeads.length, 1); assert.equal(c.store.leadNotes.length, 1);
+  assert.equal(c.leads[0].value, 0); assert.equal(c.leads[0].marketingConsent, 'Not recorded');
+  assert.equal(c.store.leadNotes[0].facebookEnquiryId, first.id); assert.match(c.store.leadNotes[0].text, /Original comment/);
+  assert.equal(c.store.facebookEnquiries[0].history.filter(event => event.action === 'CRM lead linked').length, 1);
+  const snapshot = JSON.stringify(c.store); c.save = async () => false;
+  await rejects(() => updateFollowup(c, fallback.id, { status: 'Closed', notes: 'Should roll back' }), /previous records have been restored/);
+  assert.equal(JSON.stringify(c.store), snapshot);
+  await rejects(() => convertToLead(c, fallback.id), /previous records have been restored/);
+  assert.equal(c.leads.length, 1); assert.equal(c.store.facebookCRMLeads.length, 1);
+  c.save = async () => { throw Error('Simulated storage failure'); };
+  await rejects(() => registerPost(c, { ...postData, url: 'https://facebook.com/groups/123/posts/999/' }), /Simulated storage failure/);
+  assert.equal(c.store.facebookPosts.length, 1);
+  for (const role of ['customer', 'contractor', undefined]) {
+    const restricted = { ...newContext(), role };
+    assert.equal(moduleAPI.render('Facebook enquiries', restricted), ''); assert.equal(moduleAPI.panel(restricted), '');
+    await rejects(() => registerPost(restricted, postData), /staff only/);
+    await rejects(() => captureEnquiry(restricted, {}), /staff only/);
+    await rejects(() => updateFollowup(restricted, 'x', { status: 'Closed' }), /staff only/);
+    await rejects(() => convertToLead(restricted, 'x'), /staff only/);
+    assert.deepEqual(restricted.store, {});
+  }
+  c.save = async () => true;
+  const escaped = await captureEnquiry(c, { postId: post.id, author: '<img src=x>', originalText: '<script>alert(1)</script>', publicCommentConfirmed: true });
+  const html = moduleAPI.render('Facebook enquiries', c);
+  assert.ok(html.includes('&lt;script&gt;')); assert.ok(!html.includes('<script>')); assert.ok(escaped.id);
+  assert.ok(moduleAPI.panel(c).includes('3 active enquiries'));
+  c.store.facebookEnquiries[0].commentURL = 'javascript:alert(1)';
+  assert.ok(!moduleAPI.render('Facebook enquiries', c).includes('href="javascript:'));
+  console.log('Facebook enquiries: safe URLs, SH/public provenance, canonical/fallback duplicates, role guards, follow-up history, CRM idempotency, save rollback and HTML escaping passed.');
+})().catch(error => { console.error(error); process.exitCode = 1; });
